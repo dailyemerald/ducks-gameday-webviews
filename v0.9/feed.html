@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="/v0.9/css/style.css">
+
+<style type="text/css">
+<style type="text/css">
+#banner {
+	z-index: 5;
+	font-size: 14px;
+	height:35px;
+}
+
+.bannerinner {
+	text-align: center;
+	padding: 6px 0px;
+	background: #BBB;
+	border-radius: 5px;
+	padding: 2px;
+}
+.feed img {
+	height: 300px;
+}
+#loadingzone {
+	position:fixed;
+	left: -9999px;
+}
+#fixed {
+	z-index:50;
+	
+}
+</style>
+</style>
+
+	<script src="http://emerald-deathstar.herokuapp.com/socket.io/socket.io.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="js/handlebars.min.js"></script>
+    <script src="/v0.9/js/jquery.timeago.js"></script>
+
+	<script id="tplBanner" type="text/html">	
+	  <div class="bannerinner">{{num}} new item{{suffix}}</div>
+	</script>
+	
+	<script id="tplImagePreloader" type="text/html">	
+	  <img src="{{{image}}}"></img>
+	</script>
+
+	<script id="tplFeedReadyHelper" type="text/html">
+		<img src="images/emerald.png" class="thumb" />
+		<h2 class="tweet-title">Loading...</h2>
+		<a href="" class="tweet-content">Hang on a second.</a>
+		<p class="time"></p>
+	</script>
+
+	<script id="tplTwitter" type="text/html">	
+	<li class="tweet" style="">
+		<img src="{{{thumbnail}}}" class="thumb" />
+		<h2 class="tweet-title">{{{title}}}</h2>
+		<a href="#" class="tweet-content">{{{content}}}</a>
+		<time class="time" datetime="{{iso_time}}"></p>
+	</li>
+	</script>
+	
+	<script id="tplInstagram" type="text/x-handlebars-template">
+	<li class="instagram" style="">
+		<img src="{{{image}}}" class="insta-img" />
+		<img src="{{{thumb}}}" class="thumb" />
+		<h2 class="instagram-title">{{title}}</h2>
+		<a href="#" class="instagram-comment">{{comment}}</a>
+		<time class="time" datetime="{{time}}"></p>
+	</li>
+	</script>
+	
+	<script type="text/javascript">
+
+	var getTime = function() {
+		return new Date().getTime();
+	}
+	var strdecode = function( data ) {
+	  try {
+      	return JSON.parse( decodeURIComponent( escape ( data ) ) );
+	  } catch (error) {
+		return {}	//TODO: this is bad.
+	  }
+    }
+
+	//////////////////////////////////////
+	
+	var socket = io.connect('http://emerald-deathstar.herokuapp.com');
+
+  	var tplInstagram = Handlebars.compile($('#tplInstagram').html());
+  	var tplTwitter   = Handlebars.compile($('#tplTwitter').html());
+  	var tplBanner   = Handlebars.compile($('#tplBanner').html());
+  	var tplImagePreloader   = Handlebars.compile($('#tplImagePreloader').html());
+
+	window.pageLaunchTime = getTime();
+	window.lastServerTime = getTime();
+	window.lastUpdateTime = getTime();
+
+	window.forcepull = function() { 
+		socket.emit('pull', {'recent':50}); 
+	}
+	socket.on('force_reload', function() {
+		window.location.reload();
+	});
+	
+	
+	socket.emit('hello', {}); // this tells the server to make a new build set and send it with the 'rebuild' event below:		
+	socket.on('rebuild', function(items) { 
+		$("#fixed").html('');	
+		console.log("rebuild", items.length);
+ 		try {
+		  items.forEach(function(item) { //this assumes the newest item is LAST for it to end up at the top.
+			//console.log(item)
+		  	processNewItem( item );
+		  });
+		  window.pullToRefresh();
+		  $("#intromessage").animate({"opacity":"0"}, 250);
+		
+		} catch (error) {
+		    socket.emit('error', JSON.stringify(error));
+		}
+	});
+	
+	socket.on('incremental_rebuild', function(items) {
+		console.log('incr reb:', items.length);
+		items.forEach(function(item) {
+			processNewItem(item);
+		});
+	});
+	
+	socket.on('newItem', function(item) {		
+		processNewItem( strdecode(item) );
+	});
+		
+
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////////
+	
+	window.newItems = 0;
+	window.itemsToShow = [];
+	window.itemsAlreadyHere = {};
+	window.lifetimeDupes = 0;
+	
+	var processNewItem = function(item) {
+		
+		if (item.d_id) {
+			if (window.itemsAlreadyHere[item.d_id] === true) { // THIS PREVENTS MULTIPLE ITEMS IN THE SAME SECOND. MUST FIX. MAKE ID BASED.
+				window.lifetimeDupes += 1
+				socket.emit("dupeItem", {d_id: item.d_id, lifetimeDupes: window.lifetimeDupes});		
+				console.log("dupe for", d_id);
+				return false;
+			} else {
+				window.itemsAlreadyHere[item.d_id] = true;
+			}
+		} else {
+			console.log("man this is old.")
+		}
+		
+		
+		if (item.type === "instagram") {
+			//console.log('process new item got item.data for isntagram:',item.data);
+			cleanedItem = {
+				image: item.data.images.low_resolution.url,
+				thumb: item.data.user['profile_picture'],
+				title: item.data.user.full_name,
+				comment: "&nbsp;\n",
+				time: item.time
+			};
+			if (item.data && item.data.caption && typeof item.data.caption.text === "string") {
+				cleanedItem.comment = item.data.caption.text;
+			}
+			//console.log(item.data);
+		    //$("#loadingzone").append( tplImagePreloader({image: item.data.images.low_resolution.url}) );
+			$("#loadingzone").append( tplInstagram(cleanedItem) );
+			itemsToShow.push( tplInstagram(cleanedItem) );
+			newItems += 1;
+			if (newItems > 1) {
+				var suffix = "s";
+			} else {
+				var suffix = "";
+			}
+			$("#banner").html(tplBanner({num: newItems, suffix:suffix}));
+			
+	    } else if (item.type === "twitter") {
+		    //console.log("tweet!", item.data);
+		    //$("#loadingzone").append(tplImagePreloader({image:item.data.thumbnail}));
+			//console.log('new tweet...', item)
+			$("#loadingzone").append( tplTwitter(item.data) );
+			itemsToShow.push( tplTwitter(item.data) );
+			newItems += 1;
+			if (newItems > 1) {
+				var suffix = "s";
+			} else {
+				var suffix = "";
+			}
+			$("#banner").html(tplBanner({num: newItems, suffix:suffix}));
+		} else {
+			console.log("unknown item type");
+		}
+	}
+	
+	$(document).ready(function() {
+		$("#banner").on('click', function() {
+			pullToRefresh();
+		});
+	});
+	
+	window.pullToRefresh = function() {
+		window.addNewItems();
+	}
+	window.addNewItems = function() {	
+		$("#banner").html("<div class=\"bannerinner\">Loading...</div>");
+		window.topItem = $("#feed li").first();		
+	
+		var newKids = $('#feed li');
+		for (var i=0;i<5;i++) {
+			if (i<newKids.length) {
+				var thisKid = $(newKids[i]);
+				var thisKidHTML = thisKid.html();
+				var fixedKid = $('<li>').html( thisKidHTML );
+				fixedKid.attr('class', thisKid.attr('class'));
+				fixedKid.css('top', thisKid.offset().top);
+				fixedKid.css('left', thisKid.offset().left);
+				fixedKid.css('position', 'fixed');
+				fixedKid.css('-webkit-transform', 'translate3d(0,0,-10px);');
+				$("#fixed").append(fixedKid);
+			}
+		}
+
+		
+		window.topItemPrevOffset = topItem.offset().top - document.body.scrollTop;
+	
+		setTimeout(function() {
+			var bigItemString = "";
+			window.itemsToShow.forEach(function(item){
+				bigItemString = bigItemString + item; 
+			});
+			itemsToShow = [];
+			newItems = 0;
+			$("#banner").html('');
+			$("#feed").prepend(bigItemString);
+			$(".time").timeago();
+			//$("img").animate({opacity: 0},100);
+		
+			window.scrollTo(0, window.topItem.offset().top - window.topItemPrevOffset);	
+		}, 20);
+		
+		setTimeout(function() {
+		  $("#fixed").html('');
+		}, 100);
+		
+		setTimeout(function() {
+			 $("#loadingzone").html('');
+		}, 500);
+	}
+	</script>
+
+</head>
+
+<body class="fan-feed">
+	
+	<div id="wrapper">
+		
+		<div class="main">
+			<div id="banner" class="tweet"></div>
+			<ul id="feed" class="feed clearfix">				
+				
+				<li id="intromessage" class="tweet">
+					<img src="images/emerald.png" class="thumb" />
+					<h2 class="tweet-title">Loading...</h2>
+					<a href="" class="tweet-content">Hang on a second.</a>
+					<p class="time"></p>
+				</li>
+				
+			</ul>
+			<ul id="fixed" class="feed clearfix">
+			</ul>
+		</div> <!-- .main -->	
+		
+	</div> <!-- #wrapper -->
+
+   <div id="loadingzone"></div>
+
+</body>
+</html>
+
+

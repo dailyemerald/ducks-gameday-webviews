@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dev.css">
+  <title>Oregon Football | The Emerald</title>
+
+  <script type="text/javascript" src="js/zepto.min.js"></script>
+  <script type="text/javascript" src="js/tabletop.js"></script>
+  <script type="text/javascript" src="js/handlebars.min.js"></script>
+
+  <script type="text/x-handlebars-template" id="tplGame">
+  	<li class="item">
+		<ul>
+			<li class="date">{{date}}</li>
+			<li class="team">{{opponent}}</li>
+			<li class="location">{{location}}</li>
+		</ul>
+	</li>
+  </script>
+
+  <script type="text/javascript">
+
+    var buildApp = function(data) {
+		var Games = data.Games.elements;
+		Games.forEach(function(game){
+			console.log(game);
+			$(".gd-list").append( tplGame(game) );
+		});
+	};
+
+    Tabletop.init({ 		
+		key: '0As1Yq-MxSBt2dDhuYVpQdU5GbnNmbEtIWFpNXzhuSVE',
+		callback: buildApp
+	});
+
+	window.tplGame  = Handlebars.compile($("#tplGame").html());
+
+  </script>
+
+</head>
+<body class="game-day schedule">
+<div id="wrapper">
+	<div class="main">
+		<ul class="gd-list" style="margin-top:0">
+			
+		</ul>
+	</div> <!-- .content -->
+</body>
+</html>

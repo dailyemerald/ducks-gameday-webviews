@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Oregon Football | The Emerald</title>
+
+  <script type="text/javascript" src="js/zepto.min.js"></script>
+  <script type="text/javascript" src="js/tabletop.js"></script>
+  <script type="text/javascript" src="js/handlebars.min.js"></script>
+
+  <script type="text/x-handlebars-template" id="tplStatsHeader">
+	<li class="heading item">
+		<ul>
+			<li class="one">{{one}}</li>
+			<li class="two">{{two}}</li>
+			<li class="three">{{three}}</li>
+			<li class="four">{{four}}</li>
+			<li class="five">{{five}}</li>
+			<li class="six">{{six}}</li>
+		</ul>
+	</li>
+  </script>
+
+  <script type="text/x-handlebars-template" id="tplStats">
+	<li class="item">
+		<ul>
+			<li class="one">{{one}}</li>
+			<li class="two">{{two}}</li>
+			<li class="three">{{three}}</li>
+			<li class="four">{{four}}</li>
+			<li class="five">{{five}}</li>
+			<li class="six">{{six}}</li>
+		</ul>
+	</li>
+  </script>
+
+  <script type="text/javascript">
+	var buildApp = function(data) {
+		var Stats = data.Stats.elements;
+		Stats.forEach(function(stat){
+			if (stat.seven === "header") {
+			  $("#stats").append( tplStatsHeader(stat) );	
+			} else { 
+			  $("#stats").append( tplStats(stat) );
+			}
+		});
+	};
+
+    Tabletop.init({ 		
+		key: '0As1Yq-MxSBt2dDBjTExWNlpHdGRJTTBTalAyb19KWnc',
+		callback: buildApp
+	});
+
+	window.tplStatsHeader  = Handlebars.compile($("#tplStatsHeader").html());
+	window.tplStats        = Handlebars.compile($("#tplStats").html());
+
+	/*
+    $(document).ready(function() {
+      $('body').doubleTap(function(){
+		location.reload();
+      });
+  	});
+	*/
+  </script>
+
+</head>
+<body class="game-day stats">
+<div id="wrapper">
+	<div class="main">
+	
+		<ul id="stats" class="gd-list">
+			
+		</ul>
+		
+	</div>
+</div> 
+</body>
+</html>
