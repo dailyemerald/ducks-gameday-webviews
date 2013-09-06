@@ -5,9 +5,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
-  <link rel="stylesheet" href="/v0.9/css/style.css">
+  <link rel="stylesheet" href="css/style.css">
 
-<style type="text/css">
 <style type="text/css">
 #banner {
 	z-index: 5;
@@ -34,12 +33,11 @@
 	
 }
 </style>
-</style>
 
-	<script src="http://emerald-deathstar.herokuapp.com/socket.io/socket.io.js"></script>
+	<script src="http://emerald-deathstar.herokuapp.com:80/socket.io/socket.io.js"></script>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-	<script type="text/javascript" src="js/handlebars.min.js"></script>
-    <script src="/v0.9/js/jquery.timeago.js"></script>
+	<script src="js/handlebars.min.js"></script>
+    <script src="js/jquery.timeago.js"></script>
 
 	<script id="tplBanner" type="text/html">	
 	  <div class="bannerinner">{{num}} new item{{suffix}}</div>
@@ -90,7 +88,7 @@
 
 	//////////////////////////////////////
 	
-	var socket = io.connect('http://emerald-deathstar.herokuapp.com');
+	var socket = io.connect('http://emerald-deathstar.herokuapp.com:80');
 
   	var tplInstagram = Handlebars.compile($('#tplInstagram').html());
   	var tplTwitter   = Handlebars.compile($('#tplTwitter').html());

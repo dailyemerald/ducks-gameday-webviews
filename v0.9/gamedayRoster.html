@@ -22,7 +22,7 @@
 
   <script type="text/javascript">
 
-    var buildApp = function(data) {
+  var buildApp = function(data) {
 		var Ducks = data.Ducks.elements;
 		Ducks.forEach(function(player){
 			//console.log(player);
@@ -36,12 +36,12 @@
 			//console.log(tplPlayer(player));
 			$("#opponent-roster").append( tplPlayer(player) );
 		});
-	};
+  };
 
-    Tabletop.init({ 		
-		key: '0As1Yq-MxSBt2dHE4TjN0X2JKaUFFSHVKLWQ3VUJlRWc',
-		callback: buildApp
-	});
+  Tabletop.init({ 		
+	  key: '0As1Yq-MxSBt2dHE4TjN0X2JKaUFFSHVKLWQ3VUJlRWc',
+	  callback: buildApp
+  });
 
 	window.tplSwitcher  = Handlebars.compile($("#tplSwitcher").html());
 	window.tplPlayer     = Handlebars.compile($("#tplPlayer").html());
@@ -64,22 +64,16 @@
   	});
   	
   </script>
-  
-  
-  <!-- DOUBLE TAP CODE BEGINS -->
 
   <script type="text/javascript">
 
     $(document).ready(function() {
-
       $('body').doubleTap(function(){
-		location.reload();
+		    location.reload();
       });
-
   	});
 
   </script>
-<!-- DOUBLE TAP CODE ENDS -->
 
   
   <title>Oregon Football | The Emerald</title>
